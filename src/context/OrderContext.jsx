@@ -30,7 +30,7 @@ export const OrderProvider = ({ children }) => {
           name: data.name || 'Unnamed Product',
           filament_type: 'Standard PLA', // Fallback, since it wasn't explicit in the calculator DB
           print_time_hours: data.time || 0,
-          calculated_price: data.sellPrice || data.finalPrice || 0,
+          calculated_price: (data.finalPrice && data.finalPrice !== '') ? Number(data.finalPrice) : (data.sellPrice || 0),
           photo: data.photo || null,
         };
       });
