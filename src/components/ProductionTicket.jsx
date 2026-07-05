@@ -51,6 +51,28 @@ const ProductionTicket = ({ order, onClose }) => {
               </div>
             </div>
 
+            {/* Client Details */}
+            <div style={{ marginBottom: '20px', padding: '12px 15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', display: 'flex', gap: '30px', flexWrap: 'wrap' }}>
+              <div>
+                <p style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px 0' }}>Client Name</p>
+                <p style={{ fontWeight: '700', fontSize: '1rem', color: '#f8fafc', margin: 0 }}>{order.client_name}</p>
+              </div>
+              {order.client_contact && (
+                <div>
+                  <p style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px 0' }}>Contact</p>
+                  <p style={{ fontWeight: '500', fontSize: '1rem', color: '#94a3b8', margin: 0 }}>{order.client_contact}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Notes */}
+            {order.notes && (
+              <div style={{ marginBottom: '20px', padding: '12px 15px', background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '8px' }}>
+                <p style={{ fontSize: '0.75rem', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 6px 0' }}>📝 Notes / Instructions</p>
+                <p style={{ fontSize: '0.95rem', color: '#e2e8f0', margin: 0, whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{order.notes}</p>
+              </div>
+            )}
+
             <div className="ticket-items">
               <h3 className="section-title">Print Items</h3>
               {order.items.map((item, idx) => {

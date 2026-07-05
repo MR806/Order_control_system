@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Trash2, TrendingUp, Cpu, ChevronDown, ChevronUp, Package, Percent, Target, Edit3, Star } from 'lucide-react';
+import { Trash2, TrendingUp, Cpu, ChevronDown, ChevronUp, Package, Percent, Target, Edit3, Star, Search, X } from 'lucide-react';
 
 export default function HistoryView({ history, deleteBudget, onEdit, toggleFavorite, isFavoritesView }) {
   const [expandedId, setExpandedId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const formatMZN = (value) => 
     new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(value);
@@ -15,6 +16,15 @@ export default function HistoryView({ history, deleteBudget, onEdit, toggleFavor
     e.stopPropagation();
     onEdit(budget);
   };
+
+  // Filter history based on search query
+  const filteredHistory = (history || []).filter((budget) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    const name = (budget.name || '').toLowerCase();
+    const date = new Date(budget.date).toLocaleDateString().toLowerCase();
+    return name.includes(q) || date.includes(q);
+  });
 
   if (!history || history.length === 0) {
     return (
@@ -36,17 +46,107 @@ export default function HistoryView({ history, deleteBudget, onEdit, toggleFavor
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-          {isFavoritesView ? "Favorites" : "Product Database"}
-        </h2>
-        <span className="badge badge-blue">
-          {history.length} saved
-        </span>
+      {/* Header + Search */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+            {isFavoritesView ? "Favorites" : "Product Database"}
+          </h2>
+          <span className="badge badge-blue">
+            {filteredHistory.length}{searchQuery ? ` of ${history.length}` : ''} saved
+          </span>
+        </div>
+
+        {/* Search Bar */}
+        <div style={{ position: 'relative' }}>
+          <Search
+            size={16}
+            style={{
+              position: 'absolute',
+              left: '0.875rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--text-muted)',
+              pointerEvents: 'none',
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Search by product name or date…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              background: 'var(--bg-input)',
+              border: '1px solid var(--border-input)',
+              borderRadius: '0.625rem',
+              padding: '0.625rem 2.5rem 0.625rem 2.5rem',
+              color: 'white',
+              fontSize: '0.9rem',
+              outline: 'none',
+              transition: 'border-color 0.2s, box-shadow 0.2s',
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = 'var(--color-blue)';
+              e.target.style.boxShadow = '0 0 0 2px rgba(59,130,246,0.2)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'var(--border-input)';
+              e.target.style.boxShadow = 'none';
+            }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{
+                position: 'absolute',
+                right: '0.875rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'var(--text-muted)',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              title="Clear search"
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
       </div>
 
+      {/* No search results */}
+      {filteredHistory.length === 0 && searchQuery && (
+        <div
+          className="glass-panel"
+          style={{ padding: '2.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+        >
+          <Search size={40} style={{ color: 'var(--text-muted)', marginBottom: '1rem' }} />
+          <h3 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>No results found</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            No products match <strong style={{ color: 'white' }}>"{searchQuery}"</strong>. Try a different term.
+          </p>
+          <button
+            onClick={() => setSearchQuery('')}
+            style={{
+              marginTop: '1rem',
+              padding: '0.5rem 1.25rem',
+              background: 'rgba(59,130,246,0.15)',
+              color: 'var(--color-blue)',
+              border: '1px solid rgba(59,130,246,0.3)',
+              borderRadius: '0.5rem',
+              fontWeight: '600',
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+            }}
+          >
+            Clear search
+          </button>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
-        {history.map((budget) => {
+        {filteredHistory.map((budget) => {
           const isExpanded = expandedId === budget.id;
 
           return (
