@@ -606,6 +606,65 @@
   to { transform: rotate(360deg); }
 }
 
+/* ── Database Folder Sidebar ────────────────────────────────── */
+.db-folder-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  padding: 1.25rem;
+  position: sticky;
+  top: 100px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.db-folder-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.db-folder-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.db-folder-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+
+/* ── Database Selection Bar ─────────────────────────────────── */
+.db-select-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 0.75rem;
+  margin-bottom: 1.25rem;
+  backdrop-filter: blur(12px);
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ── Responsive: Collapse sidebar on small screens ──────────── */
+@media (max-width: 860px) {
+  .db-folder-sidebar {
+    width: 100%;
+    position: static;
+    max-height: none;
+    padding: 1rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .db-folder-sidebar h3 {
+    width: 100%;
+  }
+}
+
 @media print {
   .print-hidden {
     display: none !important;
@@ -620,3 +679,4 @@
     border: none;
   }
 }
+

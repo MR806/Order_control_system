@@ -7,6 +7,7 @@ import CalculatorForm from './components/calculator/CalculatorForm';
 import ResultsCard from './components/calculator/ResultsCard';
 import HistoryView from './components/history/HistoryView';
 import { useCalculadora } from './hooks/useCalculadora';
+import { useCategoryManager } from './hooks/useCategoryManager';
 import { Layers, KanbanSquare, Calculator, Database, Star } from 'lucide-react';
 import './App.css';
 
@@ -24,8 +25,17 @@ function AppContent() {
     resetForm,
     loadBudget,
     handlePhotoChange,
-    toggleFavorite
+    toggleFavorite,
+    updateBudgetCategory,
   } = useCalculadora();
+
+  const {
+    categories,
+    categoriesLoading,
+    createCategory,
+    renameCategory,
+    deleteCategory,
+  } = useCategoryManager();
 
   const handleEditBudget = (budget) => {
     loadBudget(budget);
@@ -75,7 +85,7 @@ function AppContent() {
         </div>
       </header>
 
-      <main className="app-main" style={{ flexDirection: currentView === 'orders' ? 'row' : 'column', padding: currentView === 'orders' ? '20px' : '40px 20px', maxWidth: currentView === 'orders' ? 'none' : '1200px', margin: currentView === 'orders' ? '0' : '0 auto', width: '100%' }}>
+      <main className="app-main" style={{ flexDirection: currentView === 'orders' ? 'row' : 'column', padding: currentView === 'orders' ? '20px' : '40px 20px', maxWidth: currentView === 'orders' ? 'none' : '1400px', margin: currentView === 'orders' ? '0' : '0 auto', width: '100%' }}>
         
         {currentView === 'orders' && (
           <>
@@ -95,7 +105,7 @@ function AppContent() {
                 formData={formData} 
                 handleChange={handleChange}
                 handlePhotoChange={handlePhotoChange}
-                categories={[...new Set(history.map(b => b.category).filter(Boolean))].sort()}
+                categories={categories.map(c => c.name)}
               />
             </div>
             <div style={{ flex: '1 1 350px' }}>
@@ -116,6 +126,12 @@ function AppContent() {
               deleteBudget={deleteBudget} 
               onEdit={handleEditBudget}
               toggleFavorite={toggleFavorite}
+              updateBudgetCategory={updateBudgetCategory}
+              categories={categories}
+              categoriesLoading={categoriesLoading}
+              createCategory={createCategory}
+              renameCategory={renameCategory}
+              deleteCategory={deleteCategory}
             />
           </div>
         )}
@@ -127,6 +143,12 @@ function AppContent() {
               deleteBudget={deleteBudget} 
               onEdit={handleEditBudget}
               toggleFavorite={toggleFavorite}
+              updateBudgetCategory={updateBudgetCategory}
+              categories={categories}
+              categoriesLoading={categoriesLoading}
+              createCategory={createCategory}
+              renameCategory={renameCategory}
+              deleteCategory={deleteCategory}
               isFavoritesView={true}
             />
           </div>

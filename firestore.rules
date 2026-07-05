@@ -11,5 +11,10 @@ service cloud.firestore {
     match /orders/{document} {
       allow read, write: if true;
     }
+
+    // Allow read/write access to categories collection
+    match /categories/{document} {
+      allow read, write: if true;
+    }
   }
 }

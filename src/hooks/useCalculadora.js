@@ -133,6 +133,18 @@ export function useCalculadora() {
     }
   };
 
+  const updateBudgetCategory = async (ids, categoryName) => {
+    try {
+      await Promise.all(
+        ids.map((id) =>
+          updateDoc(doc(db, 'budgets', id), { category: categoryName })
+        )
+      );
+    } catch (error) {
+      console.error('Error updating budget categories:', error);
+    }
+  };
+
   return {
     formData,
     handleChange,
@@ -143,6 +155,7 @@ export function useCalculadora() {
     resetForm,
     loadBudget,
     handlePhotoChange,
-    toggleFavorite
+    toggleFavorite,
+    updateBudgetCategory,
   };
 }
