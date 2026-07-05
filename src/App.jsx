@@ -95,6 +95,7 @@ function AppContent() {
                 formData={formData} 
                 handleChange={handleChange}
                 handlePhotoChange={handlePhotoChange}
+                categories={[...new Set(history.map(b => b.category).filter(Boolean))].sort()}
               />
             </div>
             <div style={{ flex: '1 1 350px' }}>

@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Box, Clock, Zap, Target, Package, Image as ImageIcon, UploadCloud, X } from 'lucide-react';
 
-export default function CalculatorForm({ formData, handleChange, handlePhotoChange }) {
+export default function CalculatorForm({ formData, handleChange, handlePhotoChange, categories = [] }) {
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
@@ -39,15 +39,33 @@ export default function CalculatorForm({ formData, handleChange, handlePhotoChan
         </h2>
         
         <div className="order-form">
-          <div className="form-group">
-            <label>Project Name</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="e.g. Headphone Stand"
-            />
+          <div className="form-row">
+            <div className="form-group flex-1">
+              <label>Project Name</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="e.g. Headphone Stand"
+              />
+            </div>
+            <div className="form-group flex-1">
+              <label>Category</label>
+              <input
+                type="text"
+                name="category"
+                value={formData.category || ''}
+                onChange={handleChange}
+                placeholder="e.g. Organizers, Toys, Deco"
+                list="category-suggestions"
+              />
+              <datalist id="category-suggestions">
+                {categories.map((cat) => (
+                  <option key={cat} value={cat} />
+                ))}
+              </datalist>
+            </div>
           </div>
           
           <div className="form-row">

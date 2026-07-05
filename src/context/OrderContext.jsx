@@ -39,6 +39,7 @@ export const OrderProvider = ({ children }) => {
                 ? Number(data.finalPrice)
                 : data.sellPrice || 0,
             photo: data.photo || null,
+            category: data.category || '',
           };
         });
         setProducts(fetchedProducts);

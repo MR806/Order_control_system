@@ -8,6 +8,7 @@ const ENERGY_CONSUMPTION_KW = 0.12;
 export function useCalculadora() {
   const [formData, setFormData] = useState({
     name: '',
+    category: '',
     weight: 0,
     time: 0,
     packaging: 0,
@@ -69,6 +70,7 @@ export function useCalculadora() {
   const resetForm = () => {
     setFormData({
       name: '',
+      category: '',
       weight: 0,
       time: 0,
       packaging: 0,
@@ -83,6 +85,7 @@ export function useCalculadora() {
   const loadBudget = (budget) => {
     setFormData({
       name: budget.name,
+      category: budget.category || '',
       weight: budget.weight,
       time: budget.time,
       packaging: budget.packaging,

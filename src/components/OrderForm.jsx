@@ -247,7 +247,23 @@ const OrderForm = () => {
                         if (!isSelected) e.currentTarget.style.background = 'transparent';
                       }}
                     >
-                      <div style={{ fontWeight: '600' }}>{p.name}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ fontWeight: '600' }}>{p.name}</div>
+                        {p.category && (
+                          <span 
+                            style={{ 
+                              fontSize: '0.65rem', 
+                              padding: '0.1rem 0.35rem', 
+                              background: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(59,130,246,0.15)', 
+                              color: isSelected ? 'white' : 'var(--color-blue)', 
+                              borderRadius: '0.25rem',
+                              border: isSelected ? '1px solid rgba(255,255,255,0.3)' : '1px solid rgba(59,130,246,0.3)'
+                            }}
+                          >
+                            {p.category}
+                          </span>
+                        )}
+                      </div>
                       <div style={{ fontSize: '0.75rem', color: isSelected ? 'rgba(255, 255, 255, 0.8)' : 'var(--text-muted)' }}>
                         {p.filament_type} • {p.calculated_price.toFixed(2)} MZN
                       </div>
