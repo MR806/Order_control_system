@@ -2,13 +2,10 @@ import { useState, useEffect } from 'react';
 import {
   collection,
   onSnapshot,
-  query,
-  orderBy,
   addDoc,
   deleteDoc,
   updateDoc,
   doc,
-  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -17,16 +14,18 @@ export function useCategoryManager() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   // ── Listen to categories collection ──────────────────────────────────────
+  // NOTE: No orderBy() here — it requires a Firestore index on a new collection
+  // and silently fails. We sort in JS instead.
   useEffect(() => {
-    const q = query(collection(db, 'categories'), orderBy('name', 'asc'));
     const unsubscribe = onSnapshot(
-      q,
+      collection(db, 'categories'),
       (snapshot) => {
-        const fetchedCategories = snapshot.docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-        }));
-        setCategories(fetchedCategories);
+        const fetched = snapshot.docs
+          .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+          .sort((a, b) =>
+            (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })
+          );
+        setCategories(fetched);
         setCategoriesLoading(false);
       },
       (error) => {
@@ -41,14 +40,13 @@ export function useCategoryManager() {
   const createCategory = async (name) => {
     const trimmedName = name.trim();
     if (!trimmedName) return null;
-    // Prevent duplicates
+    // Prevent duplicates (case-insensitive)
     if (categories.some((c) => c.name.toLowerCase() === trimmedName.toLowerCase())) {
       return null;
     }
     try {
       const docRef = await addDoc(collection(db, 'categories'), {
         name: trimmedName,
-        createdAt: serverTimestamp(),
       });
       return docRef.id;
     } catch (error) {
