@@ -4,6 +4,7 @@ import {
   Folder, FolderPlus, FolderOpen, Check, CheckSquare,
   Square, Move, Pencil, AlertTriangle, ChevronRight,
   MoreVertical, ArrowRight, FileCode2, ChevronDown,
+  Share2,
 } from 'lucide-react';
 import { getProductDisplayId } from '../../utils/productId';
 
@@ -691,6 +692,38 @@ export default function HistoryView({
                               </div>
                             </div>
                           </div>
+
+                          {/* Facebook Post Generator Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!budget.id) return;
+                              window.open(`https://adforge-story-generator.web.app/?productId=${budget.id}`, '_blank');
+                            }}
+                            className="inline-flex items-center justify-center gap-1.5 w-full mt-3 py-2 px-3 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-sm hover:shadow transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 active:scale-[0.98]"
+                            style={{
+                              width: '100%',
+                              marginTop: '0.75rem',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px',
+                              padding: '0.5rem 0.75rem',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              color: '#ffffff',
+                              background: '#2563eb',
+                              border: 'none',
+                              borderRadius: '0.5rem',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                            title="Gerar Post Facebook para este produto"
+                          >
+                            <Share2 size={14} />
+                            <span>Gerar Post Facebook</span>
+                          </button>
                         </div>
                       </div>
                     );
