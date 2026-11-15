@@ -70,7 +70,7 @@ function AppContent() {
               <Layers size={24} />
             </div>
             <h1>
-              Geek Lab 4D <span>Workspace</span>
+              Afro Print <span>Workspace</span>
             </h1>
           </div>
 
