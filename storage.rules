@@ -1,0 +1,9 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow read/write on all 3MF files
+    match /3mf/{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}

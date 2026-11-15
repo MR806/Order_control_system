@@ -3,8 +3,9 @@ import {
   Trash2, TrendingUp, Cpu, Edit3, Star, Search, X,
   Folder, FolderPlus, FolderOpen, Check, CheckSquare,
   Square, Move, Pencil, AlertTriangle, ChevronRight,
-  MoreVertical, ArrowRight,
+  MoreVertical, ArrowRight, FileCode2, ChevronDown,
 } from 'lucide-react';
+import { getProductDisplayId } from '../../utils/productId';
 
 // ── Tiny Modal Helper ───────────────────────────────────────────────────────
 function Modal({ title, children, onClose }) {
@@ -14,24 +15,15 @@ function Modal({ title, children, onClose }) {
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '1rem',
-      }}
-      onClick={onClose}
-    >
+    <div className="sheet-overlay" onClick={onClose}>
       <div
-        className="glass-panel animate-slide-up"
-        style={{
-          background: '#0f172a', border: '1px solid rgba(51,65,85,0.9)',
-          borderRadius: '1rem', padding: '1.5rem', width: '100%', maxWidth: '420px',
-          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7)',
-        }}
+        className="glass-panel animate-slide-up sheet-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="sheet-grabber" aria-hidden="true" />
         <h3 style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '1.25rem' }}>{title}</h3>
         {children}
       </div>
@@ -127,6 +119,7 @@ export default function HistoryView({
   const [expandedId, setExpandedId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFolder, setActiveFolder] = useState('ALL');   // 'ALL' | 'NONE' | category name
+  const [foldersOpen, setFoldersOpen] = useState(false);     // mobile: folder drawer
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
 
@@ -175,8 +168,11 @@ export default function HistoryView({
     let matchesSearch = true;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
+      const customId = getProductDisplayId(budget, history).toLowerCase();
       matchesSearch =
         (budget.name || '').toLowerCase().includes(q) ||
+        customId.includes(q) ||
+        (budget.color || '').toLowerCase().includes(q) ||
         new Date(budget.date).toLocaleDateString().toLowerCase().includes(q) ||
         (budget.category || '').toLowerCase().includes(q);
     }
@@ -279,25 +275,39 @@ export default function HistoryView({
   }
 
   return (
-    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+    <div className="db-layout">
 
-      {/* ── LEFT: Folder Sidebar ───────────────────────────────────── */}
+      {/* ── LEFT: Folder Sidebar (collapsible on mobile) ───────────── */}
       {!isFavoritesView && (
-        <div className="db-folder-sidebar glass-panel">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3 style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <div className={`db-folder-sidebar glass-panel ${foldersOpen ? 'is-open' : ''}`}>
+          <div className="db-folder-header">
+            <button
+              type="button"
+              className="db-folder-toggle"
+              onClick={() => setFoldersOpen((o) => !o)}
+              aria-expanded={foldersOpen}
+            >
+              <Folder size={16} style={{ color: 'var(--color-blue)' }} />
+              <span className="db-folder-toggle-label">
+                {activeFolder === 'ALL' ? 'All Products' : activeFolder === 'NONE' ? 'Uncategorized' : activeFolder}
+              </span>
+              <ChevronDown size={16} className="db-folder-chevron" />
+            </button>
+            <h3 className="db-folder-title" style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Folders
             </h3>
             <button
               onClick={() => { setModalInput(''); setShowCreateModal(true); }}
               className="btn-icon"
               title="New Folder"
+              aria-label="New folder"
               style={{ color: 'var(--color-blue)' }}
             >
               <FolderPlus size={16} />
             </button>
           </div>
 
+          <div className="db-folder-body">
           {/* All / Uncategorized */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '0.5rem' }}>
             {[
@@ -313,7 +323,7 @@ export default function HistoryView({
                   border: activeFolder === value ? '1px solid rgba(59,130,246,0.25)' : '1px solid transparent',
                   transition: 'all 0.15s',
                 }}
-                onClick={() => setActiveFolder(value)}
+                onClick={() => { setActiveFolder(value); setFoldersOpen(false); }}
                 onMouseEnter={(e) => { if (activeFolder !== value) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
                 onMouseLeave={(e) => { if (activeFolder !== value) e.currentTarget.style.background = 'transparent'; }}
               >
@@ -345,7 +355,7 @@ export default function HistoryView({
                 folder={folder}
                 isActive={activeFolder === folder.name}
                 count={folderCounts[folder.name] || 0}
-                onSelect={(name) => setActiveFolder(name)}
+                onSelect={(name) => { setActiveFolder(name); setFoldersOpen(false); }}
                 onRename={(f) => { setModalInput(f.name); setShowRenameModal(f); }}
                 onDelete={(f) => setShowDeleteModal(f)}
               />
@@ -357,6 +367,7 @@ export default function HistoryView({
               No folders yet.{'\n'}Click <strong style={{ color: 'white' }}>+</strong> to create one.
             </p>
           )}
+          </div>{/* /db-folder-body */}
         </div>
       )}
 
@@ -489,7 +500,7 @@ export default function HistoryView({
                   </div>
                 )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: '1rem' }}>
                   {budgets.map((budget) => {
                     const isExpanded = expandedId === budget.id;
                     const isSelected = selectedIds.has(budget.id);
@@ -532,27 +543,40 @@ export default function HistoryView({
                         <div style={{ padding: '1.25rem', paddingLeft: selectMode ? '2.5rem' : '1.25rem', position: 'relative' }}>
                           {/* Action buttons */}
                           {!selectMode && (
-                            <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.2rem' }}>
-                              <button onClick={(e) => { e.stopPropagation(); toggleFavorite(budget.id, budget.isFavorite); }} className="btn-icon" style={{ color: budget.isFavorite ? 'var(--color-amber)' : 'var(--text-muted)' }}>
+                            <div className="hv-card-actions" style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.2rem' }}>
+                              <button aria-label={budget.isFavorite ? 'Remove from favorites' : 'Add to favorites'} onClick={(e) => { e.stopPropagation(); toggleFavorite(budget.id, budget.isFavorite); }} className="btn-icon" style={{ color: budget.isFavorite ? 'var(--color-amber)' : 'var(--text-muted)' }}>
                                 <Star size={16} fill={budget.isFavorite ? 'currentColor' : 'none'} />
                               </button>
-                              <button onClick={(e) => handleEdit(e, budget)} className="btn-icon">
+                              <button aria-label="Edit product" onClick={(e) => handleEdit(e, budget)} className="btn-icon">
                                 <Edit3 size={16} />
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); deleteBudget(budget.id); }} className="btn-icon" style={{ color: '#ef4444' }}>
+                              <button aria-label="Delete product" onClick={(e) => { e.stopPropagation(); deleteBudget(budget.id); }} className="btn-icon" style={{ color: '#ef4444' }}>
                                 <Trash2 size={16} />
                               </button>
                             </div>
                           )}
 
                           {/* Product header */}
-                          <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '0.875rem', paddingRight: selectMode ? 0 : '90px' }}>
+                          <div className={selectMode ? '' : 'hv-card-head'} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '0.875rem', paddingRight: selectMode ? 0 : '90px' }}>
                             {budget.photo && (
                               <img src={budget.photo} alt={budget.name} style={{ width: '44px', height: '44px', borderRadius: '7px', objectFit: 'cover', marginRight: '10px', flexShrink: 0 }} />
                             )}
                             <div style={{ minWidth: 0 }}>
                               <h3 style={{ fontWeight: 'bold', fontSize: '1rem', lineHeight: 1.3, marginBottom: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{budget.name}</h3>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '2px' }}>
+                                <span style={{
+                                  fontSize: '0.68rem',
+                                  fontWeight: '700',
+                                  padding: '0.12rem 0.45rem',
+                                  background: 'rgba(168,85,247,0.15)',
+                                  color: '#c084fc',
+                                  border: '1px solid rgba(168,85,247,0.3)',
+                                  borderRadius: '0.25rem',
+                                  letterSpacing: '0.04em',
+                                  fontFamily: 'monospace'
+                                }}>
+                                  {getProductDisplayId(budget, history)}
+                                </span>
                                 <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                                   {new Date(budget.date).toLocaleDateString()}
                                 </span>
@@ -560,6 +584,55 @@ export default function HistoryView({
                                   <span style={{ fontSize: '0.62rem', padding: '0.12rem 0.4rem', background: 'rgba(96,165,250,0.1)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.25)', borderRadius: '0.25rem' }}>
                                     {budget.category}
                                   </span>
+                                )}
+                                {budget.color && (
+                                  <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontSize: '0.62rem',
+                                    fontWeight: '600',
+                                    padding: '0.12rem 0.45rem',
+                                    background: 'rgba(255,255,255,0.06)',
+                                    color: '#e2e8f0',
+                                    border: '1px solid rgba(255,255,255,0.12)',
+                                    borderRadius: '0.25rem',
+                                  }}>
+                                    <span style={{
+                                      width: '7px',
+                                      height: '7px',
+                                      borderRadius: '50%',
+                                      backgroundColor: budget.colorHex || '#94a3b8',
+                                      display: 'inline-block',
+                                      border: '1px solid rgba(255,255,255,0.3)',
+                                      flexShrink: 0
+                                    }} />
+                                    {budget.color}
+                                  </span>
+                                )}
+                                {budget.threemfUrl && (
+                                  <a
+                                    href={budget.threemfUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title="Download 3MF file from Firebase Storage"
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      fontSize: '0.62rem',
+                                      fontWeight: '600',
+                                      padding: '0.12rem 0.4rem',
+                                      background: 'rgba(16,185,129,0.12)',
+                                      color: 'var(--color-emerald)',
+                                      border: '1px solid rgba(16,185,129,0.3)',
+                                      borderRadius: '0.25rem',
+                                      textDecoration: 'none',
+                                    }}
+                                  >
+                                    <FileCode2 size={11} /> 3MF
+                                  </a>
                                 )}
                               </div>
                             </div>

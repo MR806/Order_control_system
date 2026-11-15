@@ -12,6 +12,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
+import { getProductDisplayId } from '../utils/productId';
+import { generateNextTicketId, getOrderDisplayId } from '../utils/orderId';
+
 export const OrderContext = createContext();
 
 export const OrderProvider = ({ children }) => {
@@ -26,11 +29,18 @@ export const OrderProvider = ({ children }) => {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
+        const allBudgets = snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
+
         const fetchedProducts = {};
         snapshot.docs.forEach((docSnap) => {
           const data = docSnap.data();
+          const budgetItem = { id: docSnap.id, ...data };
           fetchedProducts[docSnap.id] = {
             product_id: docSnap.id,
+            custom_id: data.customId || getProductDisplayId(budgetItem, allBudgets),
             name: data.name || 'Unnamed Product',
             filament_type: 'Standard PLA',
             print_time_hours: data.time || 0,
@@ -40,6 +50,9 @@ export const OrderProvider = ({ children }) => {
                 : data.sellPrice || 0,
             photo: data.photo || null,
             category: data.category || '',
+            threemfUrl: data.threemfUrl || null,
+            color: data.color || '',
+            colorHex: data.colorHex || '#111827',
           };
         });
         setProducts(fetchedProducts);
@@ -59,9 +72,13 @@ export const OrderProvider = ({ children }) => {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const fetchedOrders = snapshot.docs.map((docSnap) => ({
+        const rawOrders = snapshot.docs.map((docSnap) => ({
           order_id: docSnap.id,
           ...docSnap.data(),
+        }));
+        const fetchedOrders = rawOrders.map((ord) => ({
+          ...ord,
+          ticket_id: ord.ticket_id || getOrderDisplayId(ord, rawOrders),
         }));
         setOrders(fetchedOrders);
         setOrdersLoading(false);
@@ -78,8 +95,10 @@ export const OrderProvider = ({ children }) => {
   // ── Add a new order ───────────────────────────────────────────────────────
   const addOrder = async (orderData) => {
     try {
+      const assignedTicketId = generateNextTicketId(orders);
       await addDoc(collection(db, 'orders'), {
         ...orderData,
+        ticket_id: assignedTicketId,
         createdAt: serverTimestamp(),
       });
     } catch (error) {
@@ -126,6 +145,7 @@ export const OrderProvider = ({ children }) => {
         addOrder,
         updateOrderStatus,
         deleteOrder,
+        nextTicketId: generateNextTicketId(orders),
       }}
     >
       {children}

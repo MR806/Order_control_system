@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Save, CheckCircle } from 'lucide-react';
 
-export default function ResultsCard({ results, formData, saveBudget, resetForm }) {
+export default function ResultsCard({ results, formData, saveBudget, resetForm, nextProductId }) {
   const [showToast, setShowToast] = useState(false);
+  const currentId = formData.customId || nextProductId;
 
   const formatMZN = (value) => {
     return new Intl.NumberFormat('pt-MZ', {
@@ -52,7 +53,27 @@ export default function ResultsCard({ results, formData, saveBudget, resetForm }
 
   return (
     <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', position: 'sticky', top: '24px' }}>
-      <h2 className="panel-title" style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Cost Summary</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 className="panel-title" style={{ fontSize: '1.25rem', margin: 0 }}>Cost Summary</h2>
+        {currentId && (
+          <span 
+            title="Product ID assigned upon saving"
+            style={{
+              fontSize: '0.75rem',
+              fontWeight: '700',
+              padding: '0.2rem 0.55rem',
+              background: 'rgba(168,85,247,0.15)',
+              color: '#c084fc',
+              border: '1px solid rgba(168,85,247,0.3)',
+              borderRadius: '0.375rem',
+              fontFamily: 'monospace',
+              letterSpacing: '0.04em',
+            }}
+          >
+            {currentId}
+          </span>
+        )}
+      </div>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
@@ -82,7 +103,7 @@ export default function ResultsCard({ results, formData, saveBudget, resetForm }
 
       <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '0.75rem', padding: '1.5rem', border: '1px solid var(--border-color)' }}>
         <div style={{ fontSize: '0.875rem', color: 'var(--color-blue)', marginBottom: '0.25rem' }}>Suggested Sell Price</div>
-        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'white' }}>
+        <div style={{ fontSize: 'clamp(1.9rem, 8vw, 2.5rem)', fontWeight: 'bold', color: 'white' }}>
           {formatMZN(results.sellPrice)}
         </div>
 
@@ -118,7 +139,7 @@ export default function ResultsCard({ results, formData, saveBudget, resetForm }
 
       {showToast && (
         <div style={{ 
-          position: 'absolute', top: '-40px', left: 0, right: 0, 
+          position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 68px)', left: '1rem', right: '1rem', zIndex: 100, maxWidth: '420px', margin: '0 auto', 
           background: 'var(--color-emerald)', color: 'white', 
           padding: '0.75rem', borderRadius: '0.5rem', 
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',

@@ -2,8 +2,8 @@ import React, { useState, useContext, useRef, useEffect } from 'react';
 import { OrderContext } from '../context/OrderContext';
 import { PlusCircle, ShoppingCart, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
 
-const OrderForm = () => {
-  const { products, addOrder } = useContext(OrderContext);
+const OrderForm = ({ onSubmitted }) => {
+  const { products, addOrder, nextTicketId } = useContext(OrderContext);
   const [clientName, setClientName] = useState('');
   const [clientContact, setClientContact] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
@@ -49,6 +49,8 @@ const OrderForm = () => {
   // Filter products by search query
   const filteredProducts = sortedProducts.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (p.custom_id && p.custom_id.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (p.color && p.color.toLowerCase().includes(searchTerm.toLowerCase())) ||
     p.filament_type.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -75,14 +77,35 @@ const OrderForm = () => {
     setQuantity(1);
     setNotes('');
     setShowError(false);
+    if (onSubmitted) onSubmitted();
   };
 
   return (
     <div className="glass-panel order-form-container">
-      <h2 className="panel-title">
-        <PlusCircle className="icon-blue" />
-        New Order Intake
-      </h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+        <h2 className="panel-title" style={{ margin: 0 }}>
+          <PlusCircle className="icon-blue" />
+          New Order Intake
+        </h2>
+        {nextTicketId && (
+          <span 
+            title="Next assigned Order Ticket ID"
+            style={{
+              fontSize: '0.72rem',
+              fontWeight: '700',
+              padding: '0.2rem 0.5rem',
+              background: 'rgba(59,130,246,0.15)',
+              color: 'var(--color-blue)',
+              border: '1px solid rgba(59,130,246,0.3)',
+              borderRadius: '0.375rem',
+              fontFamily: 'monospace',
+              letterSpacing: '0.02em',
+            }}
+          >
+            {nextTicketId}
+          </span>
+        )}
+      </div>
       <form onSubmit={handleSubmit} className="order-form">
         <div className="form-group">
           <label>Client Name</label>
@@ -129,7 +152,9 @@ const OrderForm = () => {
             }}
           >
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {selectedProduct ? `${selectedProduct.name} - ${selectedProduct.filament_type}` : 'Select a product...'}
+              {selectedProduct
+                ? `${selectedProduct.custom_id ? `[${selectedProduct.custom_id}] ` : ''}${selectedProduct.name}${selectedProduct.color ? ` (${selectedProduct.color})` : ''} - ${selectedProduct.filament_type}`
+                : 'Select a product...'}
             </span>
             {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
@@ -248,7 +273,25 @@ const OrderForm = () => {
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ fontWeight: '600' }}>{p.name}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {p.custom_id && (
+                            <span 
+                              style={{ 
+                                fontSize: '0.62rem', 
+                                fontWeight: '700',
+                                padding: '0.1rem 0.35rem', 
+                                background: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(168,85,247,0.15)', 
+                                color: isSelected ? 'white' : '#c084fc', 
+                                borderRadius: '0.25rem',
+                                border: isSelected ? '1px solid rgba(255,255,255,0.3)' : '1px solid rgba(168,85,247,0.3)',
+                                fontFamily: 'monospace',
+                              }}
+                            >
+                              {p.custom_id}
+                            </span>
+                          )}
+                          <div style={{ fontWeight: '600' }}>{p.name}</div>
+                        </div>
                         {p.category && (
                           <span 
                             style={{ 
@@ -264,8 +307,15 @@ const OrderForm = () => {
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: isSelected ? 'rgba(255, 255, 255, 0.8)' : 'var(--text-muted)' }}>
-                        {p.filament_type} • {p.calculated_price.toFixed(2)} MZN
+                      <div style={{ fontSize: '0.75rem', color: isSelected ? 'rgba(255, 255, 255, 0.8)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        <span>{p.filament_type}</span>
+                        {p.color && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            • <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: p.colorHex || '#94a3b8', display: 'inline-block', border: '1px solid rgba(255,255,255,0.3)' }} />
+                            {p.color}
+                          </span>
+                        )}
+                        <span>• {p.calculated_price.toFixed(2)} MZN</span>
                       </div>
                     </button>
                   );

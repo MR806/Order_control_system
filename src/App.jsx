@@ -8,8 +8,15 @@ import ResultsCard from './components/calculator/ResultsCard';
 import HistoryView from './components/history/HistoryView';
 import { useCalculadora } from './hooks/useCalculadora';
 import { useCategoryManager } from './hooks/useCategoryManager';
-import { Layers, KanbanSquare, Calculator, Database, Star } from 'lucide-react';
+import { Layers, KanbanSquare, Calculator, Database, Star, Plus, X } from 'lucide-react';
 import './App.css';
+
+const NAV_ITEMS = [
+  { id: 'orders',     label: 'Orders',     Icon: KanbanSquare },
+  { id: 'calculator', label: 'Calculator', Icon: Calculator },
+  { id: 'history',    label: 'Database',   Icon: Database },
+  { id: 'favorites',  label: 'Favorites',  Icon: Star },
+];
 
 function AppContent() {
   const [ticketOrder, setTicketOrder] = useState(null);
@@ -27,6 +34,9 @@ function AppContent() {
     handlePhotoChange,
     toggleFavorite,
     updateBudgetCategory,
+    apply3mfData,
+    nextProductId,
+    handleColorChange,
   } = useCalculadora();
 
   const {
@@ -37,6 +47,14 @@ function AppContent() {
     deleteCategory,
   } = useCategoryManager();
 
+  const [orderSheetOpen, setOrderSheetOpen] = useState(false);
+
+  const goTo = (view) => {
+    setOrderSheetOpen(false);
+    setCurrentView(view);
+    window.scrollTo({ top: 0 });
+  };
+
   const handleEditBudget = (budget) => {
     loadBudget(budget);
     setCurrentView('calculator');
@@ -46,8 +64,8 @@ function AppContent() {
   return (
     <div className="app-container">
       <header className="app-header">
-        <div className="header-content" style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <div className="header-content">
+          <div className="brand">
             <div className="logo-icon">
               <Layers size={24} />
             </div>
@@ -55,65 +73,91 @@ function AppContent() {
               Geek Lab 4D <span>Workspace</span>
             </h1>
           </div>
-          
-          <nav className="top-nav">
-            <button 
-              className={`nav-btn ${currentView === 'orders' ? 'active' : ''}`}
-              onClick={() => setCurrentView('orders')}
-            >
-              <KanbanSquare size={18} /> Orders
-            </button>
-            <button 
-              className={`nav-btn ${currentView === 'calculator' ? 'active' : ''}`}
-              onClick={() => setCurrentView('calculator')}
-            >
-              <Calculator size={18} /> Calculator
-            </button>
-            <button 
-              className={`nav-btn ${currentView === 'history' ? 'active' : ''}`}
-              onClick={() => setCurrentView('history')}
-            >
-              <Database size={18} /> Database
-            </button>
-            <button 
-              className={`nav-btn ${currentView === 'favorites' ? 'active' : ''}`}
-              onClick={() => setCurrentView('favorites')}
-            >
-              <Star size={18} /> Favorites
-            </button>
+
+          {/* Desktop / tablet navigation */}
+          <nav className="top-nav" aria-label="Main navigation">
+            {NAV_ITEMS.map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                className={`nav-btn ${currentView === id ? 'active' : ''}`}
+                aria-current={currentView === id ? 'page' : undefined}
+                onClick={() => goTo(id)}
+              >
+                <Icon size={18} /> {label}
+              </button>
+            ))}
           </nav>
         </div>
       </header>
 
-      <main className="app-main" style={{ flexDirection: currentView === 'orders' ? 'row' : 'column', padding: currentView === 'orders' ? '20px' : '40px 20px', maxWidth: currentView === 'orders' ? 'none' : '1400px', margin: currentView === 'orders' ? '0' : '0 auto', width: '100%' }}>
+      {/* Mobile navigation: thumb-reachable bottom tab bar */}
+      <nav className="bottom-nav" aria-label="Main navigation">
+        {NAV_ITEMS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            className={`bottom-nav-btn ${currentView === id ? 'active' : ''}`}
+            aria-current={currentView === id ? 'page' : undefined}
+            onClick={() => goTo(id)}
+          >
+            <Icon size={22} />
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
+
+      <main className={`app-main ${currentView === 'orders' ? 'app-main--orders' : 'app-main--page'}`}>
         
         {currentView === 'orders' && (
           <>
-            <aside className="sidebar">
-              <OrderForm />
+            {/* Mobile: the intake form lives in a bottom sheet opened by the FAB */}
+            {orderSheetOpen && (
+              <div className="sheet-backdrop" onClick={() => setOrderSheetOpen(false)} />
+            )}
+            <aside className={`sidebar ${orderSheetOpen ? 'sidebar--open' : ''}`}>
+              <button
+                type="button"
+                className="sidebar-close"
+                aria-label="Close new order form"
+                onClick={() => setOrderSheetOpen(false)}
+              >
+                <X size={20} />
+              </button>
+              <OrderForm onSubmitted={() => setOrderSheetOpen(false)} />
             </aside>
             <section className="board-container">
               <KanbanBoard onOpenTicket={setTicketOrder} />
             </section>
+            <button
+              type="button"
+              className="fab"
+              onClick={() => setOrderSheetOpen(true)}
+              aria-label="New order"
+            >
+              <Plus size={24} />
+              <span>New order</span>
+            </button>
           </>
         )}
 
         {currentView === 'calculator' && (
-          <div className="animate-fade-in" style={{ display: 'flex', gap: '2rem', width: '100%', flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 600px' }}>
+          <div className="animate-fade-in calc-layout">
+            <div className="calc-form-col">
               <CalculatorForm 
                 formData={formData} 
                 handleChange={handleChange}
                 handlePhotoChange={handlePhotoChange}
                 categories={categories.map(c => c.name)}
+                onApply3mf={apply3mfData}
+                handleColorChange={handleColorChange}
               />
             </div>
-            <div style={{ flex: '1 1 350px' }}>
-              <ResultsCard 
+            <div className="calc-results-col">
+              <ResultsCard
                 formData={formData}
                 results={results}
                 saveBudget={saveBudget}
                 resetForm={resetForm}
+                nextProductId={nextProductId}
               />
             </div>
           </div>

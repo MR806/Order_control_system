@@ -40,7 +40,7 @@ const OrderCard = ({ order, onOpenTicket }) => {
           <div style={{ display: 'flex', gap: '10px' }}>
             <button 
               onClick={() => setShowDeleteConfirm(false)}
-              style={{ backgroundColor: '#334155', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold', transition: 'background 0.2s' }}
+              style={{ backgroundColor: '#334155', color: '#fff', padding: '10px 18px', minHeight: '44px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold', transition: 'background 0.2s' }}
               onMouseOver={(e) => e.target.style.backgroundColor = '#475569'}
               onMouseOut={(e) => e.target.style.backgroundColor = '#334155'}
             >
@@ -48,7 +48,7 @@ const OrderCard = ({ order, onOpenTicket }) => {
             </button>
             <button 
               onClick={handleDelete}
-              style={{ backgroundColor: '#ef4444', color: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'bold', transition: 'background 0.2s' }}
+              style={{ backgroundColor: '#ef4444', color: '#fff', padding: '10px 18px', minHeight: '44px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold', transition: 'background 0.2s' }}
               onMouseOver={(e) => e.target.style.backgroundColor = '#dc2626'}
               onMouseOut={(e) => e.target.style.backgroundColor = '#ef4444'}
             >
@@ -60,7 +60,9 @@ const OrderCard = ({ order, onOpenTicket }) => {
 
       <div className="order-card-header">
         <div>
-          <span className="badge badge-blue">{order.order_id}</span>
+          <span className="badge badge-blue" style={{ fontFamily: 'monospace', letterSpacing: '0.02em', fontSize: '0.72rem' }}>
+            {order.ticket_id || order.order_id}
+          </span>
           <h3 className="client-name">{order.client_name}</h3>
         </div>
         <p className="order-price">{order.total_price.toFixed(2)} MZN</p>
@@ -72,6 +74,7 @@ const OrderCard = ({ order, onOpenTicket }) => {
             onClick={() => onOpenTicket(order)}
             className="btn-icon"
             title="Digital Ticket"
+            aria-label="Open digital ticket"
           >
             <Printer size={16} />
           </button>
@@ -80,6 +83,7 @@ const OrderCard = ({ order, onOpenTicket }) => {
             onClick={() => setShowDeleteConfirm(true)}
             className="btn-icon"
             title="Delete Order"
+            aria-label="Delete order"
             style={{ color: 'rgba(239, 68, 68, 0.7)' }}
             onMouseOver={(e) => e.currentTarget.style.color = '#ef4444'}
             onMouseOut={(e) => e.currentTarget.style.color = 'rgba(239, 68, 68, 0.7)'}

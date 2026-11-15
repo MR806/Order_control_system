@@ -8,12 +8,13 @@ const ProductionTicket = ({ order, onClose }) => {
   const printRef = useRef();
 
   if (!order) return null;
+  const displayId = order.ticket_id || order.order_id;
 
   const handleDownloadPDF = () => {
     const element = printRef.current;
     const opt = {
       margin:       0.5,
-      filename:     `Order_${order.order_id}_Ticket.pdf`,
+      filename:     `${displayId}_Ticket.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2, useCORS: true, logging: false },
       jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -41,7 +42,7 @@ const ProductionTicket = ({ order, onClose }) => {
             <div className="ticket-meta" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px', marginBottom: '20px' }}>
               <div>
                 <p className="meta-label">Order ID</p>
-                <p className="meta-value text-blue">{order.order_id}</p>
+                <p className="meta-value text-blue" style={{ fontFamily: 'monospace', letterSpacing: '0.02em' }}>{displayId}</p>
               </div>
               <div className="text-right">
                 <p className="meta-label">Queue Status</p>
@@ -98,13 +99,27 @@ const ProductionTicket = ({ order, onClose }) => {
                     
                     <div className="item-details" style={{ flex: 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <p className="item-name" style={{ margin: 0 }}>{product.name}</p>
+                        <p className="item-name" style={{ margin: 0 }}>
+                          {product.custom_id && (
+                            <span style={{ marginRight: '6px', color: '#c084fc', fontFamily: 'monospace', fontSize: '0.85em' }}>
+                              [{product.custom_id}]
+                            </span>
+                          )}
+                          {product.name}
+                        </p>
                         <p className="order-price" style={{ margin: 0, fontSize: '1.1rem' }}>
                           {(product.calculated_price * item.quantity).toFixed(2)} MZN
                         </p>
                       </div>
-                      <div className="item-specs" style={{ display: 'flex', gap: '15px', marginTop: '10px', fontSize: '0.9rem', color: '#94a3b8' }}>
+                      <div className="item-specs" style={{ display: 'flex', gap: '15px', marginTop: '10px', fontSize: '0.9rem', color: '#94a3b8', flexWrap: 'wrap' }}>
                         <p><span>Filament:</span> <span className="text-emerald" style={{ color: '#34d399' }}>{product.filament_type}</span></p>
+                        {product.color && (
+                          <p style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                            <span>Color:</span>
+                            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: product.colorHex || '#94a3b8', display: 'inline-block', border: '1px solid rgba(255,255,255,0.4)' }} />
+                            <span style={{ color: '#f8fafc', fontWeight: '600' }}>{product.color}</span>
+                          </p>
+                        )}
                         <p><span>Time:</span> <span className="text-amber" style={{ color: '#fbbf24' }}>{product.print_time_hours}h</span></p>
                         <p><span>Unit:</span> <span style={{ color: '#cbd5e1' }}>{product.calculated_price.toFixed(2)} MZN</span></p>
                       </div>
