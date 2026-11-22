@@ -3,7 +3,7 @@ import { collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, query, order
 import { db } from '../firebase';
 import { generateNextProductId } from '../utils/productId';
 
-const MATERIAL_COST_PER_GRAM = 3.0; // 3000 MZN por 1kg (1000g)
+const MATERIAL_COST_PER_GRAM = 3.5545; // ~3.55 MZN/g (3554.50 MZN por 1kg)
 const ENERGY_CONSUMPTION_KW = 0.12;
 
 export function useCalculadora() {
