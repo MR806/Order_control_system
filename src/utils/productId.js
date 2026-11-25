@@ -32,19 +32,22 @@ export function generateNextProductId(history = [], targetYear = new Date().getF
       }
     });
 
-    // If no products have customId stored yet, use the total number of items
-    // created in targetYear (or total items if date is missing) so existing items
-    // don't cause ID collisions
-    if (maxSeq === 0 && history.length > 0) {
-      const yearCount = history.filter((item) => {
-        if (!item || !item.date) return true;
-        try {
-          return new Date(item.date).getFullYear() === targetYear;
-        } catch {
-          return true;
-        }
-      }).length;
-      maxSeq = yearCount;
+    // Also count unassigned items for this year to avoid potential sequence collisions
+    const unassignedCount = history.filter((item) => {
+      if (!item) return false;
+      const rawId = item.customId || item.productId || '';
+      const hasId = rawId && String(rawId).trim() !== '';
+      if (hasId) return false;
+      try {
+        const itemYear = item.date ? new Date(item.date).getFullYear() : targetYear;
+        return itemYear === targetYear;
+      } catch {
+        return true;
+      }
+    }).length;
+
+    if (unassignedCount > maxSeq) {
+      maxSeq = unassignedCount;
     }
   }
 
@@ -55,7 +58,8 @@ export function generateNextProductId(history = [], targetYear = new Date().getF
 
 /**
  * Return display ID for a product. If the item already has a stored customId, return it.
- * Otherwise, dynamically compute its crescent ID based on its position in history.
+ * Otherwise, dynamically compute its crescent ID based on its position in history,
+ * ensuring no collisions with already assigned IDs.
  *
  * @param {Object} budget - The budget item
  * @param {Array} history - Full history array
@@ -63,22 +67,45 @@ export function generateNextProductId(history = [], targetYear = new Date().getF
  */
 export function getProductDisplayId(budget, history = []) {
   if (!budget) return '';
-  if (budget.customId) return budget.customId;
-  if (budget.productId) return budget.productId;
+  if (budget.customId && String(budget.customId).trim() !== '') return String(budget.customId).trim();
+  if (budget.productId && String(budget.productId).trim() !== '') return String(budget.productId).trim();
 
   // Fallback: compute crescent order position by chronological date
   const year = budget.date ? new Date(budget.date).getFullYear() : new Date().getFullYear();
+
+  // Collect all already assigned sequence numbers for this year to avoid collisions
+  const assignedSeqs = new Set();
+  (history || []).forEach((b) => {
+    if (!b) return;
+    const rawId = b.customId || b.productId || '';
+    const match = String(rawId).trim().match(/^AP(\d{4})-?(\d+)$/i);
+    if (match && parseInt(match[1], 10) === year) {
+      assignedSeqs.add(parseInt(match[2], 10));
+    }
+  });
 
   // Filter items in the same year that don't have a stored customId, sorted oldest first
   const unassigned = (history || [])
     .filter((b) => {
       if (!b) return false;
       const bYear = b.date ? new Date(b.date).getFullYear() : year;
-      return bYear === year && !b.customId && !b.productId;
+      const hasId = (b.customId && String(b.customId).trim() !== '') || (b.productId && String(b.productId).trim() !== '');
+      return bYear === year && !hasId;
     })
     .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
 
   const index = unassigned.findIndex((b) => b.id === budget.id);
-  const seqNumber = (index >= 0 ? index + 1 : 1);
-  return `AP${year}${String(seqNumber).padStart(3, '0')}`;
+  const targetIndex = index >= 0 ? index : unassigned.length;
+
+  let currentSeq = 1;
+  let availableCount = 0;
+  while (true) {
+    if (!assignedSeqs.has(currentSeq)) {
+      if (availableCount === targetIndex) {
+        return `AP${year}${String(currentSeq).padStart(3, '0')}`;
+      }
+      availableCount++;
+    }
+    currentSeq++;
+  }
 }

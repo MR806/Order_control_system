@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
-import { generateNextProductId } from '../utils/productId';
+import { generateNextProductId, getProductDisplayId } from '../utils/productId';
 
 const MATERIAL_COST_PER_GRAM = 3.5545; // ~3.55 MZN/g (3554.50 MZN por 1kg)
 const ENERGY_CONSUMPTION_KW = 0.12;
@@ -121,9 +121,13 @@ export function useCalculadora() {
   };
 
   const loadBudget = (budget) => {
+    const existingCustomId = (budget.customId && String(budget.customId).trim() !== '')
+      ? String(budget.customId).trim()
+      : getProductDisplayId(budget, history);
+
     setFormData({
       id: budget.id || null,
-      customId: budget.customId || '',
+      customId: existingCustomId,
       name: budget.name || '',
       category: budget.category || '',
       weight: budget.weight || 0,
@@ -148,9 +152,20 @@ export function useCalculadora() {
       try {
         const budgetRef = doc(db, 'budgets', formData.id);
         const { id, ...dataToSave } = formData;
+
+        // Ensure customId is never empty on edit
+        let resolvedCustomId = (dataToSave.customId && String(dataToSave.customId).trim() !== '')
+          ? String(dataToSave.customId).trim()
+          : getProductDisplayId({ id: formData.id, ...formData }, history);
+
+        if (!resolvedCustomId || resolvedCustomId.trim() === '') {
+          resolvedCustomId = generateNextProductId(history);
+        }
+
         await updateDoc(budgetRef, {
           ...dataToSave,
           ...results,
+          customId: resolvedCustomId,
           updatedAt: new Date().toISOString(),
         });
       } catch (error) {
@@ -160,14 +175,20 @@ export function useCalculadora() {
     }
 
     // New product: generate sequential ID (e.g. AP2026001)
-    const assignedId = formData.customId || generateNextProductId(history);
+    let assignedId = (formData.customId && String(formData.customId).trim() !== '')
+      ? String(formData.customId).trim()
+      : generateNextProductId(history);
+
+    if (!assignedId || assignedId.trim() === '') {
+      assignedId = generateNextProductId(history);
+    }
 
     const newBudget = {
+      ...formData,
+      ...results,
       customId: assignedId,
       date: new Date().toISOString(),
       isFavorite: false,
-      ...formData,
-      ...results
     };
     delete newBudget.id;
     
